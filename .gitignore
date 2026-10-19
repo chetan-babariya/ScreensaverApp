@@ -1,0 +1,41 @@
+## =====================================
+## Build Results & Artifacts
+## =====================================
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## =====================================
+## Visual Studio & IDE Files
+## =====================================
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+.history/
+
+## =====================================
+## Generated Files / Temp Dumps
+## =====================================
+tree.txt
+*.log
+*.tmp
+*.bak
+
+## =====================================
+## NuGet Packages
+## =====================================
+*.nuget.props
+*.nuget.targets
+packages/
+
+## =====================================
+## OS Generated Files
+## =====================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
