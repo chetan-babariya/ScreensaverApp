@@ -5,36 +5,43 @@
     <!-- net48 ships in-box on Windows 10/11 -> no runtime to bundle, smallest possible footprint -->
     <TargetFramework>net48</TargetFramework>
     <UseWPF>true</UseWPF>
-    <!-- Pinning x64 avoids a nasty trap: a 32-bit process that reads a path containing the
-         literal text "System32" gets silently redirected by Windows to SysWOW64 instead.
-         Since this app's own libvlc folder lives in System32 once installed, a 32-bit build
-         would fail to find it there even though it works fine from any other folder.
-         Virtually all Windows 10/11 machines today are 64-bit, so this is a safe default. -->
+    <!-- The installer ships only the x64 playback engine. -->
     <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
-    <!-- Needed only for System.Windows.Forms.Screen.AllScreens (multi-monitor enumeration)
-         and System.Windows.Forms.Cursor (reliable global cursor position) -->
+    <!-- Used for monitor enumeration and the independent raw-input message loop. -->
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyName>ScreensaverApp</AssemblyName>
+    <AssemblyName>CineSaver</AssemblyName>
+    <Product>CineSaver</Product>
     <RootNamespace>ScreensaverApp</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>assets\App.ico</ApplicationIcon>
     <Platforms>AnyCPU</Platforms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <!-- Production build: skip generating ScreensaverApp.pdb entirely. Debug symbols are
-         only useful for attaching a debugger, and this exe ships as a renamed .scr into
-         System32, so there is no reason to carry that extra file around on every install. -->
+    <!-- Release artifacts do not include debug symbols. -->
     <DebugType>none</DebugType>
+    <VlcWindowsX86Enabled>false</VlcWindowsX86Enabled>
+    <VlcWindowsX64Enabled>true</VlcWindowsX64Enabled>
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <EmbeddedResource Include="assets\App.ico" LogicalName="CineSaver.App.ico" />
     <!-- LibVLC's decode/color-conversion pipeline is accurate (full-range RGB output),
          unlike WPF's built-in MediaElement, which washes out colors on many H.264 files
          due to a long-standing Media Foundation limited-range-to-RGB conversion bug. -->
     <PackageReference Include="LibVLCSharp" Version="3.9.1" />
-    <PackageReference Include="LibVLCSharp.WPF" Version="3.9.1" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="installer\**;tests\**;manager\**" />
+    <EmbeddedResource Remove="installer\**;tests\**;manager\**" />
+    <Page Remove="installer\**;tests\**;manager\**" />
+  </ItemGroup>
+  <Target Name="CreateScreensaver" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TargetDir)CineSaver.scr" />
+    <Copy SourceFiles="$(TargetPath).config" DestinationFiles="$(TargetDir)CineSaver.scr.config" Condition="Exists('$(TargetPath).config')" />
+  </Target>
 </Project>

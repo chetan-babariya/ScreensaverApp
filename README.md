@@ -1,121 +1,218 @@
-# ScreensaverApp — build & install
+# CineSaver 1.6.0
 
-A minimal, dependency-free video screensaver. Targets .NET Framework 4.8
-(built into every Windows 10/11 install), so the compiled `.scr` needs
-nothing installed on the target machine and stays a few hundred KB.
+A Windows 10/11 x64 video screensaver using .NET Framework 4.8 and LibVLC.
 
-## 1. Build
+## Install or update
 
-1. Open `ScreensaverApp.csproj` in Visual Studio 2022 (or `dotnet build` from
-   the CLI — the SDK-style project works with either).
-2. Set configuration to **Release**, platform **x64** (this project pins
-   `PlatformTarget` to x64 in the `.csproj` — see the note below on why).
-3. First build will restore NuGet packages (needs internet access once) — it
-   pulls in LibVLCSharp and the bundled native libvlc binaries.
-4. Build. Output lands in `bin\Release\net48\ScreensaverApp.exe`, alongside
-   a `libvlc` folder containing the native playback engine — **that whole
-   folder needs to travel with the exe**, both when testing and when you
-   install it into System32 later.
+1. Double-click `dist\CineSaver-Setup.exe`.
+2. Keep **Compatibility mode** selected on older or unstable graphics drivers.
+3. Optionally choose another video and change the idle interval.
+4. Click **Install / Update**. A first installation selects the screensaver;
+   later updates preserve whether it is enabled or another saver is selected.
 
-`UseWPF` and `UseWindowsForms` in the `.csproj` cover the UI shell; the
-`LibVLCSharp` / `LibVLCSharp.WPF` / `VideoLAN.LibVLC.Windows` packages
-supply video playback.
+The one setup file contains the video and all required x64 DLLs. Copy just this
+setup file to another PC; do not copy files into System32. No administrator rights,
+VLC installation, or developer tools are required on the target PC.
 
-### Why LibVLC instead of WPF's built-in MediaElement
+Installation is per Windows account, under
+`%LOCALAPPDATA%\CineSaver\Releases`. Setup adds **CineSaver Manager** and
+an uninstall shortcut to the current user's Start menu. An installed copy of Setup
+is kept at `%LOCALAPPDATA%\CineSaver\CineSaver-Setup.exe` for repairs and uninstall.
+An upgrade from ScreensaverApp reuses its original AppData folder and stable
+registration identifiers to preserve saved videos and the original Windows-settings
+backup. Its Windows Apps entry and Start menu shortcuts are renamed to CineSaver;
+new installations use the CineSaver folder. Source project/namespace identifiers
+remain unchanged for compatibility with the existing development setup.
+New releases are extracted before selection; obsolete managed releases are removed
+afterward when their files are not locked. The old manually copied System32 files
+are left alone and are no longer selected after installation.
 
-WPF's `MediaElement` renders through Windows' Media Foundation pipeline,
-which has a long-standing bug: it doesn't correctly expand limited-range
-YCbCr color to full-range RGB on many H.264 files, so video looks visibly
-washed out and flat compared to VLC or MPV playing the identical file.
-LibVLC's decode and color-conversion pipeline gets this right, at the cost
-of a heavier output folder (~40–50 MB of native libvlc binaries instead of
-using what's already built into Windows). For a screensaver that's still a
-perfectly reasonable trade — it's not shipped to end users at scale, it's
-copied once into System32 on machines you control.
+Remove **CineSaver** from Windows **Settings → Apps** to uninstall. If this
+app is still selected, uninstall restores the screensaver/idle settings saved at
+the first installation. It preserves a different saver selected afterward and
+does not change the Windows “On resume, display logon screen” preference.
 
-## 2. Add your video
+Uninstall runs from Temp, retries short-lived locks, and preserves its marker and
+registration if cleanup is blocked so removal can be retried. Manager, Setup,
+shortcuts, and preview launchers use a working directory outside the installation
+to avoid keeping release folders locked through external Windows processes.
 
-Drop your video next to the built `.exe` as `screensaver.mp4`
-(`bin\Release\net48\screensaver.mp4`). Use H.264/AAC in an MP4 container —
-that combination decodes through Media Foundation on every Windows version
-back to 7, so you won't hit missing-codec failures on other people's
-machines. Avoid exotic codecs (VP9, AV1, HEVC) unless you know the target
-machine can decode them.
+## CineSaver Manager
 
-## 3. Package as a .scr and install
+After installing once, open **Start → CineSaver → CineSaver Manager**.
+Windows' Screen Saver Settings **Settings** button also opens the manager.
+There is no need to rerun Setup to change everyday preferences.
 
+Setup and Manager share a dark navy theme with cyan/violet accents drawn from
+the supplied neon infinity monitor logo. The logo is also the Windows application
+icon. Buttons and labels keep their intended text colors while saving/installing.
+
+- Choose a video, or restore **Use included video** to return to the video bundled
+  with Setup. MP4/H.264 is recommended; the picker also accepts M4V, MKV, MOV, AVI,
+  WebM, and WMV. Codec support and resource use depend on the chosen video.
+- Set the idle interval, enable/disable this screensaver, and select compatibility
+  or automatic/hardware playback. Click **Apply changes** to save.
+- **Preview selection** plays the video you just chose before applying it, in a
+  separate resizable window. It also uses your pending playback mode and clock. Closing the
+  preview stops its renderer, including when playback is unresponsive.
+- The current video thumbnail loads automatically. Choosing a video or restoring
+  the included video updates the thumbnail. **Discard changes** returns to the
+  saved selection. A thumbnail failure leaves the Preview action available.
+- The **Developer** page and bottom credit use clearly marked sample information
+  in `manager/DeveloperInfo.cs`. See [BUILDING.md](BUILDING.md) to customize and rebuild.
+- All application and shortcut icons come from `assets/App.ico`. Replace that
+  file with your own multi-size Windows icon and rebuild Setup to customize it.
+- Read bounded playback logs in **Diagnostics**, or open Windows settings and
+  uninstall controls from the manager.
+
+The manager runs only when opened. It adds no tray process, service, or startup
+task, and does not load VLC into the manager process. Thumbnail generation briefly
+starts a separate player, captures one still, and stops it (12-second limit with
+a bounded cleanup wait). Thumbnails remain in memory; temporary images are removed.
+A live preview runs until closed. The manager can be closed after saving.
+
+Selected videos are copied into `%LOCALAPPDATA%\CineSaver\Videos`; the original
+source file can then be moved or deleted. Preferences are atomically saved in
+`%LOCALAPPDATA%\CineSaver\settings.xml`. Video selection and preferences survive
+app updates, while the original bundled video stays available as a default.
+Changes apply to the next screensaver/preview launch. Editing preferences while a
+different Windows screensaver is selected leaves that other saver enabled unless
+you explicitly enable this one. Uninstall removes the manager, owned shortcuts,
+managed videos, and preferences along with the player.
+
+## Clocks and keyboard shortcut
+
+Open **Customization** in CineSaver Manager:
+
+- Choose **Minimal digital**, **Neon digital**, **Analog**, or **Flip cards**.
+  Select **Off · video only** to hide the clock (the default).
+- Choose a corner or the center, Small/Medium/Large size, and cyan, white, violet,
+  or amber accents. Toggle 24-hour time, seconds, and the date independently.
+- The live clock preview and video thumbnail reflect these choices immediately.
+  **Preview selection** opens the selected video with the draft clock; **Apply
+  changes** saves both. **Discard changes** restores the saved preferences.
+- Under **Start screensaver shortcut**, select an unused **Ctrl + Alt + letter**
+  combination, for example **Ctrl + Alt + S**, then apply. Disabled is the default.
+  The Start menu's **CineSaver → Start CineSaver** shortcut also starts it directly.
+
+The hotkey belongs to that Windows Start menu shortcut. It works with the manager
+closed, using the signed-in Windows desktop's Explorer shell, and adds no service,
+tray app, startup task, or resident hotkey listener. Other software can reserve the
+same combination; choose another letter if it conflicts. Windows may take a moment
+to recognize a changed shortcut. Release the launch keys; Escape or other input
+dismisses the saver. Starting it manually does not lock Windows; use Win+L to lock.
+The idle timer and the manual shortcut are independent, so a shortcut can still
+start CineSaver when automatic idle activation is disabled.
+
+Clocks read **DateTime.Now** from the local PC on every update, including changes
+to the system clock, time zone, daylight saving, and date. They use Windows fonts
+and built-in .NET drawing, with no added clock library, downloads, or subscriptions.
+A native transparent child window keeps the clock above the VLC video in both
+playback modes, clips it to previews, and passes input through. Each monitor gets
+its own clock. Clock drawings refresh at most once per second and only occupy the
+clock's small rectangle; video decoding remains the main resource cost.
+
+Clock and shortcut preferences survive Install / Update. Uninstall removes the
+Start CineSaver shortcut and its hotkey along with the other application files.
+
+## Playback modes and resource use
+
+**Compatibility** (default): software video decoding, Windows GDI video output,
+and software rendering for the WPF shell. This avoids VLC's Direct3D video path
+and reduces reliance on older graphics drivers. Desktop composition still belongs
+to Windows; the app cannot repair a system-wide driver or hardware failure.
+
+Select automatic/hardware playback in the manager to opt into VLC's normal
+hardware-capable output. This may reduce CPU work on stable graphics drivers.
+Switch back to Compatibility if it causes problems. Audio, on-screen titles,
+and video OSD are disabled.
+
+The package includes only x64 VLC, avoiding approximately 94.5 MiB of unused x86
+binaries from the previous output. This remains a continuously playing video
+application, rather than a static screensaver. CPU/memory depend on the video,
+screen size, playback mode, and monitor count. The original video is preserved;
+no silent transcoding or quality reduction is performed.
+
+## Reliability changes
+
+- An independent message thread receives raw keyboard/mouse-button/wheel input,
+  so exit does not depend on WPF focus over the native video. Cursor movement
+  uses physical screen coordinates, with an 8-pixel tolerance and 600 ms arming
+  period. Only fullscreen mode exits on user input; the Settings thumbnail does not.
+- Exit first hides the windows. Native playback calls, including synchronous VLC
+  Stop/Dispose, run on dedicated playback workers, never on the UI thread.
+- An independent watchdog terminates only this process after 2 seconds of blocked
+  shutdown, or 8 seconds without a UI heartbeat. This works while Windows can
+  still schedule the watchdog; it is not a recovery tool for an OS/GPU-wide hang.
+- Missing media and playback errors exit safely. No playback progress for 15
+  seconds, including a preview that never loads, also requests exit.
+- Native video windows are created black, use Windows-owned brushes, and are
+  updated after video-output creation. Cropping is refreshed when the viewport
+  changes. There is no transparent WPF video-wrapper overlay.
+- Playback callbacks cannot synchronously wait for the UI. Pending restarts are
+  discarded on shutdown; one shared VLC engine serves all monitor players.
+- Fullscreen placement uses physical HWND coordinates for DPI correctness. A
+  display-configuration change ends the current saver so the next launch can
+  enumerate the new monitors. A second fullscreen instance is rejected.
+- Logs are asynchronous, queue-limited, and rotate around 1 MiB into one previous
+  file at `%LOCALAPPDATA%\CineSaver\Logs\saver.log`. No input content is logged.
+
+## Build a new setup file
+
+Install a .NET SDK capable of building .NET Framework 4.8 desktop projects. NuGet
+restore needs network access the first time; playback and installation work offline.
+
+```powershell
+.\Build-Installer.ps1 -VideoPath 'C:\Videos\screensaver.mp4'
 ```
-copy bin\Release\net48\ScreensaverApp.exe  ScreensaverApp.scr
-copy bin\Release\net48\screensaver.mp4      screensaver.mp4
+
+This builds into a fresh staging folder, creates a real `.scr` and its matching
+`.scr.config`, bundles x64 dependencies and the supplied video, and writes:
+
+```text
+dist\CineSaver-Setup.exe
+dist\CineSaver-Setup.sha256
 ```
 
-Then, as admin, copy the `.scr`, the video, **and the entire `libvlc`
-folder** from `bin\Release\net48\` into `C:\Windows\System32`:
+For development only:
 
-```
-copy ScreensaverApp.scr        C:\Windows\System32\
-copy screensaver.mp4           C:\Windows\System32\
-xcopy /E /I libvlc              C:\Windows\System32\libvlc\
+```powershell
+dotnet build ScreensaverApp.csproj -c Release
+# /c: open the bundled manager; /p <HWND>: preview; /s: actual fullscreen
 ```
 
-Don't also copy these into `SysWOW64` — this project is pinned to a 64-bit
-build specifically so it never needs to. (A 32-bit build placed in
-`System32` runs into a nasty trap: Windows silently redirects any file
-path containing the literal text "System32" to `SysWOW64` instead for
-32-bit processes, so a 32-bit `.scr` would never actually find its own
-`libvlc` folder once installed, even though it works fine everywhere else.)
+Build-Installer also builds the separate `manager/Manager.csproj` and bundles its
+executable; a player-only development build shows a hint if no manager is next to it.
+No-argument/config mode does not load native VLC. Unknown arguments and invalid preview
+handles exit without opening a fullscreen window.
 
-Missing the `libvlc` folder is the most common failure mode after this
-change — the screensaver will show a black screen with no video and no
-error, because LibVLC's native binaries simply aren't there to load.
+## Verification
 
-It will then appear in **Settings → Personalization → Lock screen →
-Screen saver settings** dropdown, named after the file (`ScreensaverApp`).
+The smoke-test executable contains isolated registry/filesystem installer tests,
+real native watchdog deadline tests, and actual playback integration tests.
+Fullscreen integration uses a separate desktop that is never switched to, so it
+does not cover the user's desktop. Native key messages exercise fullscreen exit;
+raw-device registration is checked separately.
 
-## 4. Test without installing
-
-You don't need to install it to test the three modes Windows will actually
-invoke — just run the exe directly with the same arguments Windows uses:
-
+```powershell
+dotnet build tests\SmokeTests.csproj -c Release
+$fixture = Join-Path $PWD 'obj\installer-smoke'
+Start-Process .\dist\CineSaver-Setup.exe -ArgumentList @('/extract', ('"' + $fixture + '"')) -Wait -WindowStyle Hidden
+.\tests\bin\Release\net48\ScreensaverApp.SmokeTests.exe "$fixture\CineSaver.scr"
+.\tests\bin\Release\net48\ScreensaverApp.SmokeTests.exe --fullscreen "$fixture\CineSaver.scr"
+# Use the payload.zip path printed/created under obj\package-* by the build:
+.\tests\bin\Release\net48\ScreensaverApp.SmokeTests.exe --installer 'C:\path\to\payload.zip'
+.\tests\bin\Release\net48\ScreensaverApp.SmokeTests.exe --manager 'C:\path\to\payload.zip'
+.\tests\bin\Release\net48\ScreensaverApp.SmokeTests.exe --migration 'C:\path\to\payload.zip'
 ```
-ScreensaverApp.exe /s          -> fullscreen run, across all monitors
-ScreensaverApp.exe /c          -> config dialog
-ScreensaverApp.exe /p 12345    -> embeds into window handle 12345 (preview)
-```
 
-For `/p`, `12345` needs to be a real HWND to be visible — easiest way to
-sanity-check preview mode is to just add the .scr via the Settings dropdown
-and look at the live thumbnail Windows renders there.
+Playback tests include two loops of the supplied 15.77-second video, viewport
+resizing, normal close, destroyed preview parent, invalid handle, missing video,
+and corrupt video. Longer/custom clips require increasing the loop-test duration.
+The installer/manager tests use isolated registry and file locations, including
+their shortcut folders; they never change the real desktop's screensaver settings
+or Start menu. They cover Apply, custom-video import, update persistence, default
+restore, preview cleanup, bounded diagnostics, and migration from the earlier setup.
 
-## Design notes / why it's built this way
-
-- **One window per monitor** (`Screen.AllScreens`) rather than one giant
-  virtual-desktop window — this keeps each screen's video correctly
-  positioned even with mixed DPI or non-aligned monitor arrangements, and
-  avoids the stretching artifacts you get from spanning a single window
-  across monitors with different scale factors.
-- **PerMonitorV2 DPI awareness** (`app.manifest`) so the video renders sharp
-  on high-DPI displays instead of being upscaled blurry by Windows' DPI
-  virtualization.
-- **Mouse-jitter tolerance**: exits only after the cursor moves more than 8px
-  *after* a short arming delay, not on any `MouseMove` event. Without this,
-  screensavers built from naive `MouseMove -> Exit` code quit almost
-  instantly on trackpads or optical mice that report tiny phantom deltas.
-- **LibVLC for playback, not WPF's `MediaElement`** — see the build section
-  above; MediaElement's Media Foundation backend washes out colors on many
-  H.264 files, LibVLC's pipeline doesn't.
-- **Crop-to-fill instead of letterbox-to-fit**: once playback starts, the
-  code compares the video's native aspect ratio to the window's and sets
-  LibVLC's crop geometry to fill the window completely (cropping overflow)
-  rather than showing bars — the same idea as CSS `object-fit: cover`.
-- **Pinned to x64** (`PlatformTarget` in the `.csproj`) specifically to
-  avoid the WOW64 System32→SysWOW64 path-redirection trap that would
-  otherwise break the app the moment it's installed into `System32`, even
-  though it runs fine from anywhere else.
-- **Looping is set two ways**: an `input-repeat` option on the media itself,
-  plus a manual restart on `EndReached` as a fallback, since some libvlc
-  builds ignore `input-repeat` on certain container formats.
-- **Video shipped as a plain file, not an embedded resource** — playback
-  needs a real seekable file/URI; embedding it as a resource would just
-  require extracting it to a temp file at startup anyway, so shipping the
-  file directly is simpler and just as clean.
+The original rare driver black screen has not been reproduced, and multiple
+physical monitors/mixed-DPI transitions need testing on suitable hardware.

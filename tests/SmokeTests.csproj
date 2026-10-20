@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms><UseWPF>true</UseWPF>
+    <PlatformTarget>x64</PlatformTarget><LangVersion>latest</LangVersion>
+    <AssemblyName>ScreensaverApp.SmokeTests</AssemblyName>
+    <StartupObject>ScreensaverApp.Tests.Program</StartupObject>
+    <ApplicationManifest>..\app.manifest</ApplicationManifest>
+    <VlcWindowsX86Enabled>false</VlcWindowsX86Enabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScreensaverApp.csproj" />
+    <Compile Include="..\installer\Setup.cs" Link="SetupImplementation.cs" />
+    <Compile Include="..\manager\ManagerService.cs" Link="ManagerService.cs" />
+    <Compile Include="..\manager\ManagerWindow.cs" Link="ManagerWindow.cs" />
+    <Compile Include="..\manager\ManagerCustomization.cs" Link="ManagerCustomization.cs" />
+    <Compile Include="..\manager\PreviewSupport.cs" Link="PreviewSupport.cs" />
+    <Compile Include="..\manager\DeveloperInfo.cs" Link="DeveloperInfo.cs" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.IO.Compression" /><Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+</Project>

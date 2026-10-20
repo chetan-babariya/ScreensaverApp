@@ -3,6 +3,8 @@
 ## =====================================
 [Bb]in/
 [Oo]bj/
+dist/
+recovery-backups/
 [Ll]og/
 [Ll]ogs/
 

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>CineSaver-Setup</AssemblyName>
+    <Version>1.6.0</Version>
+    <LangVersion>latest</LangVersion>
+    <DebugType>none</DebugType>
+    <ApplicationManifest>..\app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\assets\App.ico</ApplicationIcon>
+    <Product>CineSaver</Product><AssemblyTitle>CineSaver Setup</AssemblyTitle><Description>CineSaver installer and uninstaller</Description><Company>CineSaver</Company>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\shared\SaverSettings.cs" Link="SaverSettings.cs" />
+    <Compile Include="..\shared\AppBranding.cs" Link="AppBranding.cs" />
+    <Compile Include="..\shared\UiTheme.cs" Link="UiTheme.cs" />
+    <Compile Include="..\shared\ClockOptions.cs" Link="ClockOptions.cs" />
+    <Compile Include="..\shared\QuickLaunch.cs" Link="QuickLaunch.cs" />
+    <EmbeddedResource Include="..\assets\App.ico" LogicalName="CineSaver.App.ico" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <EmbeddedResource Include="$(PayloadPath)" LogicalName="CineSaver.Payload.zip" Condition="Exists('$(PayloadPath)')" />
+  </ItemGroup>
+  <Target Name="RequirePayload" BeforeTargets="BeforeBuild" Condition="!Exists('$(PayloadPath)')">
+    <Error Text="Run Build-Installer.ps1 from the repository root to build the installer." />
+  </Target>
+</Project>

@@ -1,15 +1,15 @@
 <Window x:Class="ScreensaverApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
-        Title="ScreensaverApp"
+        xmlns:local="clr-namespace:ScreensaverApp"
+        Title="CineSaver"
         WindowStyle="None"
         ResizeMode="NoResize"
         Background="Black"
         ShowInTaskbar="False"
         Topmost="True"
-        Cursor="None">
+        Cursor="None" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <Grid Background="Black">
-        <vlc:VideoView x:Name="Player" Background="Black" />
+        <local:NativeVideoHost x:Name="Player" />
     </Grid>
 </Window>
